@@ -1,11 +1,13 @@
 const express = require('express');
 const path = require('path');
+const cookieParser = require('cookie-parser');
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 // Penyimpanan akun di memori (termasuk akun default untuk testing cepat)
 const users = [
@@ -266,8 +268,19 @@ const students = rawStudentsData
     return { npm, name, major };
   });
 
+// Middleware proteksi: wajib punya cookie 'auth_user' untuk akses /search
+function requireAuth(req, res, next) {
+  if (req.cookies && req.cookies.auth_user) {
+    return next();
+  }
+  return res.redirect('/login?next=/search');
+}
+
 // Route awal langsung arahkan ke /login dengan parameter ?next=/search
 app.get('/', (req, res) => {
+  if (req.cookies && req.cookies.auth_user) {
+    return res.redirect('/search');
+  }
   res.redirect('/login?next=/search');
 });
 
@@ -284,6 +297,9 @@ app.post('/login', (req, res) => {
   const user = users.find((u) => u.username === username && u.password === password);
 
   if (user) {
+    // Tanamkan cookie sesi login selama 1 jam
+    res.cookie('auth_user', user.username, { httpOnly: true, maxAge: 3600000 });
+
     // [VULNERABILITY: OPEN REDIRECT]
     // Server langsung me-redirect ke nilai 'next' tanpa validasi domain tujuan
     return res.redirect(next || '/search');
@@ -292,7 +308,13 @@ app.post('/login', (req, res) => {
   res.status(401).render('login', {
     nextUrl: next || '/search',
     error: 'Username or Password Not Found!'
+  });
 });
+
+// Route Logout untuk menghapus cookie sesi login
+app.get('/logout', (req, res) => {
+  res.clearCookie('auth_user');
+  res.redirect('/login?next=/search');
 });
 
 // =========================================================================
@@ -323,9 +345,9 @@ app.post('/signup', (req, res) => {
 });
 
 // =========================================================================
-// HALAMAN 2: SEARCH MAHASISWA (CELAH DOS / REDOS + NO RATE LIMIT)
+// HALAMAN 2: SEARCH MAHASISWA (DIPROTEKSI requireAuth + CELAH DOS / REDOS)
 // =========================================================================
-app.get('/search', (req, res) => {
+app.get('/search', requireAuth, (req, res) => {
   const q = req.query.q ? req.query.q.trim() : '';
   let results = [];
 
@@ -341,7 +363,7 @@ app.get('/search', (req, res) => {
     // Pola ini tetap cepat untuk teks huruf biasa yang cocok,
     // tapi akan langsung freeze (Catastrophic Backtracking) jika penyerang 
     // memasukkan string panjang + karakter simbol di akhir (misal: "aaaaaaaaaaaaaaaaaaaaaaaaa!")
-    const vulnerableRegex = /^([a-zA-Z0-9\s]+)+$/;
+    const vulnerableRegex = /^([a-zA-Z0-9\s]+)*$/;
     vulnerableRegex.test(q);
   }
 
