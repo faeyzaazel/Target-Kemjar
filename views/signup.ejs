@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>ELBASE — Registrasi Akun Baru</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f6f9; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+    .card { background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); width: 350px; }
+    h2 { margin-top: 0; color: #1a365d; }
+    input { width: 100%; padding: 10px; margin: 8px 0 16px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+    button { width: 100%; padding: 10px; background: #2f855a; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+    button:hover { background: #276749; }
+    .error { color: #c53030; background: #fff5f5; padding: 8px; border-radius: 4px; margin-bottom: 12px; font-size: 14px; }
+    .link { text-align: center; margin-top: 15px; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>ELBASE — Daftar Akun</h2>
+    
+    <% if (error) { %>
+      <div class="error"><%= error %></div>
+    <% } %>
+
+    <form method="POST" action="/signup">
+      <label>Username Baru</label>
+      <input type="text" name="username" placeholder="Buat username" required>
+      
+      <label>Password</label>
+      <input type="password" name="password" placeholder="Buat password" required>
+      
+      <button type="submit">Daftar</button>
+    </form>
+
+    <div class="link">
+      Sudah punya akun? <a href="/login">Login di sini</a>
+    </div>
+  </div>
+</body>
+</html>
