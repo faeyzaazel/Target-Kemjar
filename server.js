@@ -348,7 +348,11 @@ app.get('/search', (req, res) => {
   res.render('search', { q, results });
 });
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`[+] Server ELBASE berjalan di http://0.0.0.0:${PORT}`);
-  console.log(`[+] Total data mahasiswa dimuat: ${students.length} mahasiswa`);
-});
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`[+] Server ELBASE berjalan di http://0.0.0.0:${PORT}`);
+    console.log(`[+] Total data mahasiswa dimuat: ${students.length} mahasiswa`);
+  });
+}
+
+module.exports = app;
