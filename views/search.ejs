@@ -2,66 +2,187 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>ELBASE — Elektro Student Database</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ELBASE — Search</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;900&display=swap" rel="stylesheet">
   <style>
-    body { font-family: Arial, sans-serif; background: #f4f6f9; margin: 0; padding: 40px 20px; }
-    .container { max-width: 800px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
-    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #edf2f7; padding-bottom: 15px; margin-bottom: 25px; }
-    h2 { margin: 0; color: #1a365d; }
-    .subtitle { margin: 4px 0 0; font-size: 13px; color: #718096; }
-    .logout { text-decoration: none; color: #e53e3e; font-weight: bold; font-size: 14px; }
-    .search-box { display: flex; gap: 10px; margin-bottom: 10px; }
-    input[type="text"] { flex: 1; padding: 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 15px; }
-    button { padding: 12px 24px; background: #2b6cb0; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
-    button:hover { background: #2c5282; }
-    .hint { font-size: 13px; color: #718096; margin-bottom: 20px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-    th, td { border: 1px solid #e2e8f0; padding: 12px; text-align: left; }
-    th { background-color: #edf2f7; color: #2d3748; }
+    * { box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+    body {
+      background-color: #f5e25b;
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      padding: 40px 20px;
+    }
+    .logout {
+      position: absolute;
+      top: 32px;
+      right: 40px;
+      color: #dc2626;
+      font-weight: 700;
+      font-size: 16px;
+      text-decoration: underline;
+    }
+    .logout:hover {
+      color: #b91c1c;
+    }
+    .main-wrapper {
+      width: 100%;
+      max-width: 820px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: auto 0;
+    }
+    .main-wrapper.has-query {
+      margin-top: 90px;
+      margin-bottom: auto;
+    }
+    .brand {
+      font-size: 76px;
+      font-weight: 900;
+      color: #2438d8;
+      margin: 0 0 24px;
+      line-height: 1;
+      letter-spacing: -1.5px;
+      text-align: center;
+    }
+    .search-form {
+      width: 100%;
+      max-width: 580px;
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .search-input {
+      width: 100%;
+      padding: 13px 52px 13px 24px;
+      background-color: #f7f7f7;
+      border: none;
+      border-radius: 999px;
+      font-size: 15.5px;
+      font-weight: 500;
+      color: #2438d8;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.14);
+      outline: none;
+    }
+    .search-input::placeholder {
+      color: #2438d8;
+      opacity: 0.85;
+    }
+    .search-btn {
+      position: absolute;
+      right: 16px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #000000;
+    }
+    .search-btn:hover {
+      opacity: 0.7;
+    }
+    .table-card {
+      width: 100%;
+      margin-top: 38px;
+      background-color: #f7f7f7;
+      border-radius: 22px;
+      overflow: hidden;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    thead {
+      background-color: #2438d8;
+      color: #ffffff;
+    }
+    th {
+      padding: 15px 28px;
+      text-align: left;
+      font-weight: 700;
+      font-size: 15px;
+    }
+    td {
+      padding: 16px 28px;
+      font-size: 15px;
+      font-weight: 500;
+      color: #111111;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+    .not-found {
+      text-align: center;
+      color: #6b7280;
+      font-weight: 500;
+      padding: 18px 28px;
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <div>
-        <h2>ELBASE — Elektro Student Database</h2>
-        <p class="subtitle">Pangkalan Data Mahasiswa Departemen Teknik Elektro FTUI</p>
-      </div>
-      <a href="/login" class="logout">Keluar</a>
-    </div>
 
-    <form class="search-box" method="GET" action="/search">
-      <input type="text" name="q" placeholder="Masukkan Nama Lengkap atau NPM..." value="<%= q %>" required>
-      <button type="submit">Cari Data</button>
+  <a href="/login" class="logout">Log Out</a>
+
+  <div class="main-wrapper <%= q ? 'has-query' : '' %>">
+    <h1 class="brand">ELBASE</h1>
+
+    <form class="search-form" method="GET" action="/search">
+      <input
+        type="text"
+        name="q"
+        class="search-input"
+        placeholder="Name or NPM"
+        value="<%= q %>"
+        required
+      >
+      <button type="submit" class="search-btn" aria-label="Search">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+      </button>
     </form>
-    <p class="hint">Contoh: ketik nama mahasiswa atau 10 digit NPM untuk menampilkan jurusan.</p>
 
     <% if (q) { %>
-      <table>
-        <thead>
-          <tr>
-            <th>NPM</th>
-            <th>Nama Mahasiswa</th>
-            <th>Program Studi</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% if (results.length > 0) { %>
-            <% results.forEach(student => { %>
-              <tr>
-                <td><%= student.npm %></td>
-                <td><%= student.name %></td>
-                <td><%= student.major %></td>
-              </tr>
-            <% }) %>
-          <% } else { %>
+      <div class="table-card">
+        <table>
+          <thead>
             <tr>
-              <td colspan="3" style="text-align: center; color: #718096;">Data mahasiswa untuk "<%= q %>" tidak ditemukan.</td>
+              <th style="width: 24%;">NPM</th>
+              <th style="width: 48%;">Nama</th>
+              <th style="width: 28%;">Program Studi</th>
             </tr>
-          <% } %>
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            <% if (results.length > 0) { %>
+              <% results.forEach(student => { %>
+                <tr>
+                  <td><%= student.npm %></td>
+                  <td><%= student.name %></td>
+                  <td><%= student.major %></td>
+                </tr>
+              <% }) %>
+            <% } else { %>
+              <tr>
+                <td colspan="3" class="not-found">Data not found!</td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
     <% } %>
   </div>
+
 </body>
 </html>

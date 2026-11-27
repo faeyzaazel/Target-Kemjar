@@ -291,15 +291,15 @@ app.post('/login', (req, res) => {
 
   res.status(401).render('login', {
     nextUrl: next || '/search',
-    error: 'Username atau password salah!'
-  });
+    error: 'Username or Password Not Found!'
+});
 });
 
 // =========================================================================
 // HALAMAN 1B: SIGN UP
 // =========================================================================
 app.get('/signup', (req, res) => {
-  res.render('signup', { error: null });
+  res.render('signup', { error: null, success: null });
 });
 
 app.post('/signup', (req, res) => {
@@ -307,11 +307,19 @@ app.post('/signup', (req, res) => {
   const exists = users.some((u) => u.username === username);
 
   if (exists) {
-    return res.render('signup', { error: 'Username sudah terdaftar!' });
+    return res.render('signup', {
+      error: 'Username Already Exists!',
+      success: null
+    });
   }
 
   users.push({ username, password });
-  res.redirect('/login?next=/search');
+
+  // Kirim pesan ke variabel success untuk memicu popup browser di signup.ejs
+  res.render('signup', {
+    error: null,
+    success: `Akun "${username}" berhasil didaftarkan! Klik OK untuk ke halaman Login, atau Cancel untuk tetap di sini.`
+  });
 });
 
 // =========================================================================
@@ -319,24 +327,22 @@ app.post('/signup', (req, res) => {
 // =========================================================================
 app.get('/search', (req, res) => {
   const q = req.query.q ? req.query.q.trim() : '';
-  let results = []; // Kosong secara default sebelum user mencari
+  let results = [];
 
   if (q) {
-    // [VULNERABILITY 1: ReDoS - Catastrophic Backtracking]
-    const vulnerableRegex = new RegExp(`^([a-zA-Z0-9\\s]+)*${q}`, 'i');
-
-    // [VULNERABILITY 2: CPU Exhaustion - Heavy Blocking Loop]
-    let heavyCompute = 0;
-    for (let i = 0; i < 50000000; i++) {
-      heavyCompute += i % 7;
-    }
-
+    // 1. Jalankan filter pencarian normal terlebih dahulu agar responsif bagi user biasa
     results = students.filter(
       (s) =>
-        vulnerableRegex.test(s.name) ||
         s.name.toLowerCase().includes(q.toLowerCase()) ||
         s.npm.includes(q)
     );
+
+    // 2. [VULNERABILITY: ReDoS]
+    // Pola ini tetap cepat untuk teks huruf biasa yang cocok,
+    // tapi akan langsung freeze (Catastrophic Backtracking) jika penyerang 
+    // memasukkan string panjang + karakter simbol di akhir (misal: "aaaaaaaaaaaaaaaaaaaaaaaaa!")
+    const vulnerableRegex = /^([a-zA-Z0-9\s]+)+$/;
+    vulnerableRegex.test(q);
   }
 
   res.render('search', { q, results });
